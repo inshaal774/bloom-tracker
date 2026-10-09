@@ -1,0 +1,387 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bloom Tracker: log, rate and fix usability issues</title>
+<style>
+/* ---------- A11y Lab visual refresh ---------- */
+:root{
+ --bg:#faf5f0;--fg:#3b2f2a;--card:#fffdfb;--mut:#6b5a52;--ac:#8c4f48;
+ --acfg:#ffffff;--bd:#a08173;--ok:#3f6e4c;--bad:#a3302a;
+ --soft:#f3e6df;--mint:#e6ece3;--peach:#f8e5d6;--sky:#ebe7ef;
+ --accent2:#5f6f58;--highlight:#e8c4b0;--focus:#5a4a7a;--glow:#8c4f481a;
+}
+:root[data-theme=dark]{
+ --bg:#241b19;--fg:#f7efe9;--card:#2f2421;--mut:#d9c7bd;--ac:#e8b9a5;
+ --acfg:#2e1d18;--bd:#8c7569;--ok:#9fd3ae;--bad:#f2a49c;
+ --soft:#3e302b;--mint:#2b3a2e;--peach:#4a3629;--sky:#37323f;
+ --accent2:#b9cdb0;--highlight:#e8c4b0;--focus:#d8c6f0;--glow:#e8b9a526;
+}
+:root[data-theme=rose]{--bg:#fbf1f0;--fg:#3d2a2c;--card:#fffcfb;--mut:#6d5256;--ac:#9b4a55;--acfg:#ffffff;--bd:#a87c80;--ok:#3f6e4c;--bad:#a3302a;--soft:#f6e2e1;--mint:#e8eee6;--peach:#f9e6d8;--sky:#ece8f0;--accent2:#6a5a7e;--highlight:#eab9b5;--focus:#5a4a7a;--glow:#9b4a5519}
+:root[data-theme=sage]{--bg:#f3f5ef;--fg:#2c3328;--card:#fcfdfa;--mut:#566052;--ac:#4f6b4a;--acfg:#ffffff;--bd:#7a8c74;--ok:#2f6a3f;--bad:#a3302a;--soft:#e4ebdf;--mint:#dfeadf;--peach:#f4e9d9;--sky:#e6ebef;--accent2:#8a5a4a;--highlight:#cddbb7;--focus:#3b4f7a;--glow:#4f6b4a1a}
+:root[data-theme=lavender]{--bg:#f6f3f8;--fg:#2f2a38;--card:#fdfcfe;--mut:#5b5468;--ac:#6b5a8a;--acfg:#ffffff;--bd:#8e84a1;--ok:#2f6a4a;--bad:#a3302a;--soft:#ebe5f2;--mint:#e5ece8;--peach:#f6e8e0;--sky:#e6eaf3;--accent2:#8a5a64;--highlight:#d6c8e6;--focus:#3a4f8a;--glow:#6b5a8a1a}
+:root[data-theme=dusk]{--bg:#1f1b27;--fg:#f3eef8;--card:#2a2535;--mut:#d3cae0;--ac:#c8b6e8;--acfg:#261c3a;--bd:#8a809e;--ok:#9fd3ae;--bad:#f2a49c;--soft:#383048;--mint:#263a34;--peach:#413229;--sky:#2c3550;--accent2:#e0b8c4;--highlight:#c8b6e8;--focus:#e6dcfa;--glow:#c8b6e826}
+:root[data-theme=contrast]{--bg:#1b1512;--fg:#fffaf5;--card:#1b1512;--mut:#fffaf5;--ac:#ffd9b8;--acfg:#1b1512;--bd:#e8cdb8;--ok:#a8e6b8;--bad:#ffb0a6;--soft:#2a201b;--mint:#1f2a22;--peach:#2e2218;--sky:#241f2e;--accent2:#d4e6c8;--highlight:#ffd9b8;--focus:#ffe9a8;--glow:transparent}
+:root[data-theme=contrast] body{background:var(--bg)}
+:root[data-theme=contrast] .card,:root[data-theme=contrast] fieldset{box-shadow:none}
+:root[data-theme=blossom]{--bg:#fcf2ee;--fg:#3c2a2a;--card:#fffdfc;--mut:#6a4f4f;--ac:#a24a5c;--acfg:#ffffff;--bd:#a07a72;--ok:#3f6e4c;--bad:#a3302a;--soft:#f8e6e1;--mint:#e6eee3;--peach:#fae6d6;--sky:#ece7f0;--accent2:#55704f;--highlight:#efbcb0;--focus:#5a4a7a;--glow:#a24a5c1a}
+:root[data-theme=blossom] body{background-color:var(--bg);background-image:url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='170'%20height='170'%20viewBox='0%200%20170%20170'%3E%3Cg%20fill='%23f0c6bc'%20opacity='.55'%3E%3Ccircle%20cx='40'%20cy='28'%20r='9'/%3E%3Ccircle%20cx='52'%20cy='37'%20r='9'/%3E%3Ccircle%20cx='47'%20cy='51'%20r='9'/%3E%3Ccircle%20cx='33'%20cy='51'%20r='9'/%3E%3Ccircle%20cx='28'%20cy='37'%20r='9'/%3E%3C/g%3E%3Ccircle%20cx='40'%20cy='40'%20r='6'%20fill='%23e6b09c'%20opacity='.6'/%3E%3Cg%20fill='%23d9c9e6'%20opacity='.55'%3E%3Ccircle%20cx='128'%20cy='108'%20r='7'/%3E%3Ccircle%20cx='137'%20cy='115'%20r='7'/%3E%3Ccircle%20cx='134'%20cy='126'%20r='7'/%3E%3Ccircle%20cx='122'%20cy='126'%20r='7'/%3E%3Ccircle%20cx='119'%20cy='115'%20r='7'/%3E%3C/g%3E%3Ccircle%20cx='128'%20cy='118'%20r='4.5'%20fill='%23c9b3dc'%20opacity='.6'/%3E%3Cg%20fill='%23cddcc4'%20opacity='.6'%3E%3Cellipse%20cx='120'%20cy='34'%20rx='13'%20ry='5'%20transform='rotate%2835%20120%2034%29'/%3E%3Cellipse%20cx='136'%20cy='48'%20rx='13'%20ry='5'%20transform='rotate%28-30%20136%2048%29'/%3E%3Cellipse%20cx='36'%20cy='128'%20rx='13'%20ry='5'%20transform='rotate%28-35%2036%20128%29'/%3E%3Cellipse%20cx='52'%20cy='142'%20rx='13'%20ry='5'%20transform='rotate%2830%2052%20142%29'/%3E%3C/g%3E%3Ccircle%20cx='85'%20cy='85'%20r='2.5'%20fill='%23e6b09c'%20opacity='.5'/%3E%3Ccircle%20cx='160'%20cy='70'%20r='2'%20fill='%23c9b3dc'%20opacity='.5'/%3E%3Ccircle%20cx='10'%20cy='90'%20r='2'%20fill='%23f0c6bc'%20opacity='.6'/%3E%3C/svg%3E"),radial-gradient(ellipse at 8% 0%,color-mix(in srgb,var(--ac) 10%,transparent),transparent 30rem);background-size:170px 170px,auto;background-attachment:fixed}
+:root[data-theme=blossom] .card,:root[data-theme=blossom] fieldset,:root[data-theme=blossom] .panel,:root[data-theme=blossom] .tile,:root[data-theme=blossom] .stat-tile{background:var(--card)}
+:root[data-theme=blossom] header>p,:root[data-theme=blossom] footer{background:color-mix(in srgb,var(--bg) 82%,transparent);border-radius:12px;padding:.4rem .7rem}
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;font:1rem/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--fg);
+ background:radial-gradient(ellipse at 6% 0%,color-mix(in srgb,var(--ac) 14%,transparent),transparent 30rem),radial-gradient(ellipse at 96% 10%,color-mix(in srgb,var(--accent2) 12%,transparent),transparent 26rem),var(--bg)}
+:root[data-theme=contrast] body{background:var(--bg)}
+[hidden]{display:none!important}
+:focus-visible{outline:3px solid var(--focus);outline-offset:3px}
+.skip{position:absolute;left:.5rem;top:-4rem;background:var(--ac);color:var(--acfg);padding:.7rem 1rem;z-index:9;border-radius:10px}
+.skip:focus{top:.5rem}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+header,main,footer{max-width:72rem;margin:0 auto;padding:1.1rem 1.25rem}
+header{padding-top:1.8rem;display:flex;flex-wrap:wrap;gap:1rem;justify-content:space-between;align-items:flex-end}
+h1{font:800 clamp(2rem,5vw,3rem)/1.05 system-ui,sans-serif;letter-spacing:-.05em;margin:0;color:var(--ac)}
+header p{margin:.4rem 0 0;color:var(--mut);max-width:48ch}
+h2{font:800 1.3rem/1.2 system-ui,sans-serif;letter-spacing:-.02em;margin:0 0 .8rem}
+.row{display:flex;flex-wrap:wrap;gap:.6rem;align-items:center}
+label{font-weight:650}
+button,select,input,textarea{font:inherit;color:var(--fg)}
+button,select,input[type=text],input[type=search],textarea{min-height:2.75rem}
+select,input[type=text],input[type=search],textarea{background:var(--card);border:2px solid var(--bd);border-radius:12px;padding:.45rem .7rem;width:100%}
+textarea{min-height:5.5rem;resize:vertical}
+.btn{background:var(--ac);color:var(--acfg);border:2px solid var(--ac);border-radius:999px;padding:.5rem 1.1rem;font-weight:700;cursor:pointer;box-shadow:0 4px 12px var(--glow)}
+.ghost{background:var(--card);border:2px solid var(--bd);border-radius:999px;padding:.5rem 1rem;cursor:pointer}
+.btn:hover,.ghost:hover{transform:translateY(-1px)}
+.danger{color:var(--bad);border-color:var(--bad)}
+#theme{width:auto;border-radius:999px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(9.5rem,1fr));gap:.8rem;margin:.5rem 0 1rem}
+.tile{background:var(--card);border:1px solid var(--bd);border-radius:18px;padding:.9rem 1rem;box-shadow:0 8px 22px var(--glow)}
+.tile b{display:block;font-size:1.7rem;line-height:1.2;letter-spacing:-.04em}
+.tile span{color:var(--mut);font-size:.9rem}
+.panel{background:var(--card);border:1px solid var(--bd);border-radius:20px;padding:1.1rem;margin:1rem 0;box-shadow:0 8px 22px var(--glow)}
+.sevbars{display:grid;gap:.45rem}
+.sevbar{display:grid;grid-template-columns:8.5rem 1fr 2rem;gap:.6rem;align-items:center;font-size:.92rem}
+.track{height:.8rem;border-radius:999px;background:var(--soft);overflow:hidden}
+.fill{height:100%;background:var(--ac);border-radius:999px;transition:width .3s}
+.filters{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:.7rem}
+.filters label{display:block;margin-bottom:.2rem;font-size:.9rem}
+.wrap{overflow-x:auto;border:1px solid var(--bd);border-radius:16px;background:var(--card)}
+table{border-collapse:collapse;width:100%;min-width:54rem}
+caption{text-align:left;padding:.7rem .9rem;color:var(--mut);font-size:.92rem}
+th,td{padding:.65rem .8rem;text-align:left;vertical-align:top;border-top:1px solid color-mix(in srgb,var(--bd) 55%,transparent)}
+th{background:var(--soft);font-size:.9rem}
+th button{all:unset;cursor:pointer;font-weight:700;padding:.2rem .1rem;border-radius:6px}
+th button:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+td small{display:block;color:var(--mut)}
+.badge{display:inline-flex;gap:.35rem;align-items:center;border-radius:999px;padding:.15rem .65rem;font-size:.85rem;font-weight:700;background:var(--soft);border:1px solid var(--bd);white-space:nowrap}
+.s4{background:color-mix(in srgb,var(--bad) 14%,var(--card));color:var(--bad);border-color:var(--bad)}
+.s3{background:var(--peach)}.s2{background:var(--sky)}.s1{background:var(--mint)}
+.acts{display:flex;gap:.4rem;flex-wrap:wrap}
+.acts button{min-height:2.4rem;padding:.2rem .8rem;font-size:.9rem}
+td select{min-height:2.4rem;width:auto;padding:.2rem .5rem}
+.empty{padding:2rem 1rem;text-align:center;color:var(--mut)}
+.empty h3{margin:0 0 .3rem;color:var(--fg)}
+dialog{background:var(--card);color:var(--fg);border:2px solid var(--bd);border-radius:22px;padding:1.3rem;width:min(36rem,calc(100% - 1.5rem));box-shadow:0 25px 80px #0005}
+dialog::backdrop{background:rgba(20,10,5,.6)}
+.f{margin:.7rem 0}.f label{display:block;margin-bottom:.2rem}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:.7rem}
+fieldset{border:2px solid var(--bd);border-radius:14px;margin:.7rem 0;padding:.5rem .8rem .7rem}
+legend{font-weight:650;padding:0 .3rem}
+fieldset label{display:inline-flex;gap:.35rem;align-items:center;margin:.15rem .8rem .15rem 0;font-weight:500}
+input[type=radio]{width:1.3rem;height:1.3rem;accent-color:var(--ac)}
+.hint{color:var(--mut);font-size:.88rem}
+.err{color:var(--bad);font-weight:650;margin:.25rem 0 0}
+#status{min-height:1.6rem;color:var(--accent2);font-weight:700}
+.bulk{display:flex;flex-wrap:wrap;gap:.6rem;align-items:center;background:var(--soft);border:1px solid var(--bd);border-radius:16px;padding:.6rem .9rem;margin:.5rem 0}
+.bulk button{min-height:2.4rem;padding:.2rem .9rem}
+.over{background:color-mix(in srgb,var(--bad) 14%,var(--card));color:var(--bad);border-color:var(--bad)}
+input[type=date]{min-height:2.75rem;width:100%;background:var(--card);border:2px solid var(--bd);border-radius:12px;padding:.45rem .7rem}
+input[type=checkbox]{width:1.3rem;height:1.3rem;accent-color:var(--ac)}
+.ht{width:.7em;height:.7em;color:var(--ac);margin-left:.1em}
+.comfort{margin:.4rem 0 0}.comfort summary{display:inline-flex;align-items:center;cursor:pointer;min-height:2.75rem;padding:.5rem 1rem;border-radius:999px;background:var(--card);border:1px solid var(--bd);font-weight:650}
+.comfort-body{display:grid;gap:.8rem;margin-top:.6rem;padding:1rem;width:min(22rem,100%);margin-left:auto;background:var(--card);border:1px solid var(--bd);border-radius:20px;box-shadow:0 8px 24px var(--glow)}
+.comfort-body label{display:block;font-weight:650}.comfort-body .chk{display:flex;gap:.6rem;align-items:center;font-weight:500}.comfort-body input[type=range]{width:100%;accent-color:var(--ac);min-height:2.75rem}
+.roomy body{line-height:1.85;letter-spacing:.015em;word-spacing:.06em}
+.calm *,.calm *::before,.calm *::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+footer{color:var(--mut);font-size:.9rem}
+@media(max-width:700px){.stats{grid-template-columns:repeat(2,1fr)}.filters{grid-template-columns:1fr 1fr}.filters>:first-child{grid-column:1/-1}.two{grid-template-columns:1fr}.sevbar{grid-template-columns:7rem 1fr 1.6rem}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+@media print{header .row,.filters,.acts,.noprint,.skip{display:none!important}body{background:#fff;color:#000}}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to main content</a>
+<header>
+ <div>
+  <h1>Bloom Tracker <svg class="ht" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path fill="currentColor" d="M12 21s-7.5-4.6-9.6-9.2C.9 8.4 2.7 5 6 5c2 0 3.4 1 4.2 2.4h3.6C14.6 6 16 5 18 5c3.3 0 5.1 3.4 3.6 6.8C19.5 16.4 12 21 12 21z"/></svg></h1>
+  <p>Log what trips people up, rate how bad it is, and track each fix until it ships.</p>
+ </div>
+ <div class="noprint" style="text-align:right"><div class="row" style="justify-content:flex-end">
+  <label for="theme">Theme</label>
+  <select id="theme"><optgroup label="Light"><option value="light">Nude</option><option value="rose">Rose</option><option value="sage">Sage</option><option value="lavender">Lavender</option><option value="blossom">Blossom (floral)</option></optgroup><optgroup label="Dark"><option value="dark">Cocoa</option><option value="dusk">Dusk</option></optgroup><optgroup label="Accessibility"><option value="contrast">High contrast (soft)</option></optgroup></select>
+ </div>
+ <details class="comfort" style="text-align:left"><summary>Comfort settings</summary><div class="comfort-body"><div><label for="tsz">Text size: <output id="tszo" for="tsz">100%</output></label><input type="range" id="tsz" min="90" max="150" step="5" value="100"></div><label class="chk"><input type="checkbox" id="roomy"> Roomy text spacing</label><label class="chk"><input type="checkbox" id="calm"> Calm motion (no animations)</label><div><button class="ghost" type="button" id="creset">Reset comfort settings</button></div></div></details>
+ </div>
+</header>
+
+<main id="main" tabindex="-1">
+ <section class="stats" aria-label="Summary">
+  <div class="tile"><b id="sTotal">0</b><span>Issues logged</span></div>
+  <div class="tile"><b id="sOpen">0</b><span>Still open</span></div>
+  <div class="tile"><b id="sCrit">0</b><span>Major or critical open</span></div>
+  <div class="tile"><b id="sOver">0</b><span>Overdue</span></div>
+  <div class="tile"><b id="sDone">0%</b><span>Fixed</span></div>
+ </section>
+
+ <section class="panel" aria-labelledby="h-sev">
+  <h2 id="h-sev">Open issues by severity</h2>
+  <div class="sevbars" id="sevbars"></div>
+ </section>
+
+ <section class="panel" aria-labelledby="h-list">
+  <div class="row" style="justify-content:space-between;margin-bottom:.8rem">
+   <h2 id="h-list" style="margin:0">Issues</h2>
+   <div class="row noprint">
+    <button class="btn" id="add" type="button">Add issue</button>
+    <button class="ghost" id="csv" type="button">Download CSV</button>
+    <button class="ghost" id="bak" type="button">Backup (JSON)</button>
+    <button class="ghost" id="rst" type="button">Restore backup</button>
+    <input type="file" id="rstFile" accept=".json,application/json" hidden>
+    <button class="ghost" id="copy" type="button">Copy summary</button>
+    <button class="ghost danger" id="clear" type="button">Clear all</button>
+   </div>
+  </div>
+  <div class="filters" role="search" aria-label="Filter issues">
+   <div><label for="q">Search</label><input type="search" id="q" placeholder="Title, screen or notes" style="min-height:2.75rem;width:100%;background:var(--card);border:2px solid var(--bd);border-radius:12px;padding:.45rem .7rem"></div>
+   <div><label for="fs">Status</label><select id="fs"><option value="">All</option></select></div>
+   <div><label for="fv">Severity</label><select id="fv"><option value="">All</option></select></div>
+   <div><label for="fh">Heuristic</label><select id="fh"><option value="">All</option></select></div>
+  </div>
+  <div class="row" style="margin:.3rem 0"><p id="status" role="status" aria-live="polite" style="margin:0"></p><button class="ghost" id="undo" type="button" hidden>Undo</button></div>
+  <div class="bulk noprint" id="bulk" hidden><strong id="bulkN"></strong><button class="ghost" id="bFix" type="button">Mark fixed</button><button class="ghost danger" id="bDel" type="button">Delete selected</button><button class="ghost" id="bNone" type="button">Clear selection</button></div>
+  <div class="wrap">
+   <table id="tbl">
+    <caption id="cap"></caption>
+    <thead><tr>
+     <th scope="col"><input type="checkbox" id="selAll" aria-label="Select all shown issues"></th>
+     <th scope="col"><button type="button" data-k="title" aria-label="Sort by issue">Issue</button></th>
+     <th scope="col"><button type="button" data-k="sev" aria-label="Sort by severity">Severity</button></th>
+     <th scope="col"><button type="button" data-k="status" aria-label="Sort by status">Status</button></th>
+     <th scope="col"><button type="button" data-k="due" aria-label="Sort by due date">Due</button></th>
+     <th scope="col"><button type="button" data-k="created" aria-label="Sort by date added">Added</button></th>
+     <th scope="col">Actions</th>
+    </tr></thead>
+    <tbody id="rows"></tbody>
+   </table>
+  </div>
+  <div class="empty" id="empty" hidden></div>
+ </section>
+</main>
+<footer>Saved in this browser only. Use Backup (JSON) to move your list to another device. Press N to add an issue.</footer>
+
+<dialog id="dlg" aria-labelledby="dt">
+ <form id="form" novalidate>
+  <h2 id="dt">Add issue</h2>
+  <div class="f"><label for="fTitle">What went wrong? <span class="hint">(required)</span></label>
+   <input type="text" id="fTitle" aria-describedby="eTitle" placeholder="e.g. Checkout button is hard to find on mobile">
+   <p class="err" id="eTitle" hidden>Enter a short description of the problem.</p></div>
+  <div class="two">
+   <div class="f"><label for="fScreen">Screen or page</label><input type="text" id="fScreen" placeholder="e.g. Cart"></div>
+   <div class="f"><label for="fHeur">Heuristic broken</label><select id="fHeur"></select></div>
+  </div>
+  <div class="two">
+   <div class="f"><label for="fOwner">Owner</label><input type="text" id="fOwner" placeholder="Who will fix it?"></div>
+   <div class="f"><label for="fDue">Due date</label><input type="date" id="fDue"></div>
+  </div>
+  <fieldset><legend>Severity</legend><div id="sevRadios"></div></fieldset>
+  <div class="f"><label for="fStatus">Status</label><select id="fStatus"></select></div>
+  <div class="f"><label for="fNotes">Steps to reproduce and suggested fix</label><textarea id="fNotes"></textarea></div>
+  <div class="row" style="justify-content:flex-end;margin-top:1rem">
+   <button class="ghost" type="button" id="cancel">Cancel</button>
+   <button class="btn" type="submit" id="save">Save issue</button>
+  </div>
+ </form>
+</dialog>
+
+<dialog id="confirm" aria-labelledby="ct">
+ <h2 id="ct">Clear all issues?</h2>
+ <p>This deletes every issue saved in this browser. Download the CSV first if you want a copy.</p>
+ <div class="row" style="justify-content:flex-end"><button class="ghost" type="button" id="no">Keep issues</button><button class="btn" type="button" id="yes">Delete everything</button></div>
+</dialog>
+
+<script>
+const $=s=>document.querySelector(s);
+const SEV=[[1,'Cosmetic','Noticed, but does not slow anyone down'],[2,'Minor','Causes small hesitation or a workaround'],[3,'Major','Many people struggle or give up'],[4,'Critical','Blocks a main task']];
+const STAT=['Open','In progress','Fixed',"Won't fix"];
+const HEUR=['Visibility of system status','Match with the real world','User control and freedom','Consistency and standards','Error prevention','Recognition over recall','Flexibility and efficiency','Minimal design','Error recovery','Help and documentation','Other'];
+const SEVICON={1:'○',2:'◔',3:'◑',4:'●'};
+const KEY='usability-tracker-v1';
+let items=[],sort={k:'created',d:-1},editId=null,sel=new Set(),removed=[],undoT;
+const today=()=>new Date(Date.now()-new Date().getTimezoneOffset()*6e4).toISOString().slice(0,10);
+const active=i=>i.status==='Open'||i.status==='In progress';
+const overdue=i=>!!i.due&&i.due<today()&&active(i);
+try{items=JSON.parse(localStorage.getItem(KEY)||'[]')}catch(e){items=[]}
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(items))}catch(e){say('Could not save in this browser. Download the CSV to keep your list.')}};
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let sayT;const say=m=>{const el=$('#status');el.textContent='';clearTimeout(sayT);sayT=setTimeout(()=>el.textContent=m,30)};
+
+/* theme */
+const ts=$('#theme');
+try{ts.value=localStorage.getItem('ut-theme')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light')}catch(e){}
+const setTheme=()=>{document.documentElement.dataset.theme=ts.value;try{localStorage.setItem('ut-theme',ts.value)}catch(e){}};
+setTheme();ts.onchange=setTheme;
+const LS={get:k=>{try{return localStorage.getItem(k)}catch(e){return null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}}};
+const cz={size:+(LS.get('bt-size')||100),roomy:LS.get('bt-roomy')==='1',calm:LS.get('bt-calm')==='1'};
+function applyComfort(){const h=document.documentElement;h.style.fontSize=cz.size+'%';h.classList.toggle('roomy',cz.roomy);h.classList.toggle('calm',cz.calm);
+ $('#tsz').value=cz.size;$('#tszo').textContent=cz.size+'%';$('#roomy').checked=cz.roomy;$('#calm').checked=cz.calm;
+ LS.set('bt-size',cz.size);LS.set('bt-roomy',cz.roomy?'1':'0');LS.set('bt-calm',cz.calm?'1':'0');}
+$('#tsz').oninput=e=>{cz.size=+e.target.value;applyComfort()};
+$('#roomy').onchange=e=>{cz.roomy=e.target.checked;applyComfort()};
+$('#calm').onchange=e=>{cz.calm=e.target.checked;applyComfort()};
+$('#creset').onclick=()=>{cz.size=100;cz.roomy=false;cz.calm=false;applyComfort()};
+applyComfort();
+
+/* build selects */
+const opt=(v,t)=>`<option value="${esc(v)}">${esc(t)}</option>`;
+$('#fs').insertAdjacentHTML('beforeend',STAT.map(s=>opt(s,s)).join(''));
+$('#fv').insertAdjacentHTML('beforeend',SEV.map(s=>opt(s[0],s[0]+' '+s[1])).join(''));
+$('#fh').insertAdjacentHTML('beforeend',HEUR.map(h=>opt(h,h)).join(''));
+$('#fHeur').innerHTML=HEUR.map(h=>opt(h,h)).join('');
+$('#fStatus').innerHTML=STAT.map(s=>opt(s,s)).join('');
+$('#sevRadios').innerHTML=SEV.map(s=>`<label><input type="radio" name="sev" value="${s[0]}"> ${s[0]} ${s[1]}<span class="sr">: ${s[2]}</span></label>`).join('')+'<p class="hint" id="sevHint" style="margin:.3rem 0 0"></p>';
+document.querySelectorAll('input[name=sev]').forEach(r=>r.onchange=()=>{$('#sevHint').textContent=SEV.find(s=>s[0]==r.value)[2]});
+
+const badge=v=>{const s=SEV.find(x=>x[0]==v);return `<span class="badge s${v}"><span aria-hidden="true">${SEVICON[v]}</span>${v} ${s[1]}</span>`};
+const fmt=t=>new Date(t).toLocaleDateString(undefined,{day:'numeric',month:'short',year:'numeric'});
+
+function filtered(){
+ const q=$('#q').value.trim().toLowerCase(),fs=$('#fs').value,fv=$('#fv').value,fh=$('#fh').value;
+ return items.filter(i=>(!q||(i.title+' '+i.screen+' '+i.notes).toLowerCase().includes(q))&&(!fs||i.status===fs)&&(!fv||String(i.sev)===fv)&&(!fh||i.heur===fh))
+  .sort((a,b)=>{let x=sort.k==='due'?(a.due||'9999-12-31'):a[sort.k],y=sort.k==='due'?(b.due||'9999-12-31'):b[sort.k];if(typeof x==='string'){x=x.toLowerCase();y=y.toLowerCase()}return(x>y?1:x<y?-1:0)*sort.d});
+}
+function render(){
+ const list=filtered(),open=items.filter(i=>i.status==='Open'||i.status==='In progress');
+ $('#sTotal').textContent=items.length;$('#sOpen').textContent=open.length;
+ $('#sCrit').textContent=open.filter(i=>i.sev>=3).length;$('#sOver').textContent=items.filter(overdue).length;
+ $('#sDone').textContent=items.length?Math.round(100*items.filter(i=>i.status==='Fixed').length/items.length)+'%':'0%';
+ const max=Math.max(1,...SEV.map(s=>open.filter(i=>i.sev===s[0]).length));
+ $('#sevbars').innerHTML=SEV.slice().reverse().map(s=>{const n=open.filter(i=>i.sev===s[0]).length;return `<div class="sevbar"><span>${s[0]} ${s[1]}</span><div class="track" aria-hidden="true"><div class="fill" style="width:${100*n/max}%"></div></div><b>${n}</b></div>`}).join('');
+ $('#cap').textContent=`Showing ${list.length} of ${items.length} issues`;
+ $('#rows').innerHTML=list.map(i=>`<tr data-id="${i.id}">
+  <td><input type="checkbox" data-sel aria-label="Select ${esc(i.title)}"${sel.has(i.id)?' checked':''}></td>
+  <td><strong>${esc(i.title)}</strong><small>${esc(i.screen||'No screen noted')} · ${esc(i.heur)}${i.owner?' · Owner: '+esc(i.owner):''}</small>${i.notes?`<small>${esc(i.notes.length>140?i.notes.slice(0,140)+'…':i.notes)}</small>`:''}</td>
+  <td>${badge(i.sev)}</td>
+  <td><label class="sr" for="st${i.id}">Status for ${esc(i.title)}</label><select id="st${i.id}" data-st>${STAT.map(s=>`<option${s===i.status?' selected':''}>${esc(s)}</option>`).join('')}</select></td>
+  <td>${i.due?fmt(i.due+'T00:00'):'<span class="hint">None</span>'}${overdue(i)?' <span class="badge over"><span aria-hidden="true">!</span>Overdue</span>':''}</td>
+  <td>${fmt(i.created)}</td>
+  <td><div class="acts"><button class="ghost" type="button" data-edit aria-label="Edit ${esc(i.title)}">Edit</button><button class="ghost" type="button" data-dup aria-label="Duplicate ${esc(i.title)}">Duplicate</button><button class="ghost danger" type="button" data-del aria-label="Delete ${esc(i.title)}">Delete</button></div></td></tr>`).join('');
+ sel=new Set([...sel].filter(id=>items.some(x=>x.id===id)));
+ const shown=list.map(i=>i.id),allOn=shown.length&&shown.every(id=>sel.has(id));
+ $('#selAll').checked=!!allOn;$('#selAll').indeterminate=!allOn&&shown.some(id=>sel.has(id));
+ $('#bulk').hidden=!sel.size;$('#bulkN').textContent=sel.size+' selected';
+ $('#tbl').hidden=!list.length;
+ const em=$('#empty');em.hidden=!!list.length;
+ em.innerHTML=items.length?'<h3>No issues match these filters</h3><p>Clear the search or pick “All” in a filter.</p>':'<h3>No issues yet</h3><p>Add the first problem you spot while testing, or load a few examples to see how it works.</p><button class="ghost" type="button" id="sample">Load examples</button>';
+ document.querySelectorAll('th button').forEach(b=>b.closest('th').setAttribute('aria-sort',b.dataset.k===sort.k?(sort.d>0?'ascending':'descending'):'none'));
+}
+
+/* form */
+const dlg=$('#dlg');
+function openForm(id){
+ editId=id||null;const i=items.find(x=>x.id===id)||{title:'',screen:'',heur:HEUR[0],sev:2,status:'Open',notes:'',owner:'',due:''};
+ $('#dt').textContent=id?'Edit issue':'Add issue';$('#save').textContent=id?'Save changes':'Save issue';
+ $('#fTitle').value=i.title;$('#fScreen').value=i.screen;$('#fHeur').value=i.heur;$('#fStatus').value=i.status;$('#fNotes').value=i.notes;$('#fOwner').value=i.owner||'';$('#fDue').value=i.due||'';
+ document.querySelector(`input[name=sev][value="${i.sev}"]`).checked=true;$('#sevHint').textContent=SEV.find(s=>s[0]==i.sev)[2];
+ $('#eTitle').hidden=true;$('#fTitle').removeAttribute('aria-invalid');dlg.showModal();$('#fTitle').focus();
+}
+$('#add').onclick=()=>openForm();
+$('#cancel').onclick=()=>dlg.close();
+$('#form').onsubmit=e=>{
+ e.preventDefault();const t=$('#fTitle').value.trim();
+ if(!t){$('#eTitle').hidden=false;$('#fTitle').setAttribute('aria-invalid','true');$('#fTitle').focus();return}
+ const d={title:t,screen:$('#fScreen').value.trim(),heur:$('#fHeur').value,sev:+document.querySelector('input[name=sev]:checked').value,status:$('#fStatus').value,notes:$('#fNotes').value.trim(),owner:$('#fOwner').value.trim(),due:$('#fDue').value};
+ if(editId){Object.assign(items.find(x=>x.id===editId),d);say('Issue updated.')}
+ else{items.push({id:Date.now()+Math.floor(Math.random()*1000),created:Date.now(),...d});say('Issue added.')}
+ save();dlg.close();render();
+};
+let lastTrigger=null;
+dlg.addEventListener('close',()=>{if(lastTrigger&&document.contains(lastTrigger))lastTrigger.focus();else $('#add').focus()});
+
+/* table events */
+function removeItems(ids){
+ removed=items.filter(x=>ids.includes(x.id));items=items.filter(x=>!ids.includes(x.id));ids.forEach(id=>sel.delete(id));save();render();
+ const n=removed.length;say(n===1?`Deleted “${removed[0].title}”.`:`Deleted ${n} issues.`);
+ const u=$('#undo');u.hidden=false;clearTimeout(undoT);undoT=setTimeout(()=>{u.hidden=true;removed=[]},10000);$('#add').focus();
+}
+$('#undo').onclick=()=>{items.push(...removed);const n=removed.length;removed=[];save();render();$('#undo').hidden=true;say(n===1?'Issue restored.':n+' issues restored.');$('#add').focus()};
+$('#rows').addEventListener('click',e=>{
+ const tr=e.target.closest('tr');if(!tr)return;const id=+tr.dataset.id;
+ if(e.target.closest('[data-edit]')){lastTrigger=e.target.closest('button');openForm(id)}
+ if(e.target.closest('[data-del]'))removeItems([id]);
+ if(e.target.closest('[data-dup]')){const i=items.find(x=>x.id===id);const c={...i,id:Date.now()+Math.floor(Math.random()*1000),created:Date.now(),title:i.title+' (copy)',status:'Open'};items.push(c);save();render();say(`Duplicated “${i.title}”.`)}
+});
+$('#rows').addEventListener('change',e=>{
+ if(!e.target.matches('[data-sel]'))return;const id=+e.target.closest('tr').dataset.id;e.target.checked?sel.add(id):sel.delete(id);render();const r=document.querySelector(`tr[data-id="${id}"] [data-sel]`);if(r)r.focus();
+});
+$('#selAll').onchange=e=>{filtered().forEach(i=>e.target.checked?sel.add(i.id):sel.delete(i.id));render()};
+$('#bNone').onclick=()=>{sel.clear();render();say('Selection cleared.')};
+$('#bFix').onclick=()=>{const n=sel.size;items.forEach(i=>{if(sel.has(i.id))i.status='Fixed'});sel.clear();save();render();say(n+(n===1?' issue':' issues')+' marked as fixed.')};
+$('#bDel').onclick=()=>removeItems([...sel]);
+$('#rows').addEventListener('change',e=>{
+ if(!e.target.matches('[data-st]'))return;const id=+e.target.closest('tr').dataset.id;const i=items.find(x=>x.id===id);
+ i.status=e.target.value;save();const sel=e.target.id;render();say(`“${i.title}” is now ${i.status}.`);const n=document.getElementById(sel);if(n)n.focus();
+});
+document.querySelectorAll('th button').forEach(b=>b.onclick=()=>{sort=sort.k===b.dataset.k?{k:sort.k,d:-sort.d}:{k:b.dataset.k,d:b.dataset.k==='sev'?-1:1};render();say(`Sorted by ${b.textContent.toLowerCase()}, ${sort.d>0?'ascending':'descending'}.`)});
+['q','fs','fv','fh'].forEach(id=>$('#'+id).addEventListener(id==='q'?'input':'change',render));
+document.addEventListener('click',e=>{if(e.target.id==='sample'){
+ const now=Date.now(),day=864e5;
+ items.push(
+  {id:now+1,created:now-3*day,title:'Search icon button has no name',owner:'Design team',due:'2020-01-01',screen:'Header',heur:'Help and documentation',sev:3,status:'Open',notes:'Screen reader says “button”. Add an accessible name.'},
+  {id:now+2,created:now-2*day,title:'Form clears after a validation error',screen:'Checkout',heur:'Error recovery',sev:4,status:'In progress',notes:'Steps: leave postcode blank, press Pay. Every field is wiped. Keep what the person typed.'},
+  {id:now+3,created:now-day,title:'“Add to cart” looks different on each page',screen:'Product list',heur:'Consistency and standards',sev:2,status:'Open',notes:''},
+  {id:now+4,created:now,title:'Order total updates with no message',screen:'Cart',heur:'Visibility of system status',sev:2,status:'Fixed',notes:'Added a polite status message.'});
+ save();render();say('Four example issues added.');}});
+
+/* exports */
+const csvCell=v=>'"'+String(v??'').replace(/"/g,'""')+'"';
+function summary(){const o=items.filter(i=>i.status==='Open'||i.status==='In progress');
+ return ['Bloom Tracker summary ('+new Date().toLocaleDateString()+')',`${items.length} logged, ${o.length} open, ${items.filter(overdue).length} overdue, ${items.filter(i=>i.status==='Fixed').length} fixed`,'',...SEV.slice().reverse().map(s=>`${s[0]} ${s[1]}: ${o.filter(i=>i.sev===s[0]).length} open`),'','Top priorities:',...(o.sort((a,b)=>b.sev-a.sev).slice(0,5).map(i=>`- [${i.sev}] ${i.title} (${i.screen||'no screen'})`)||[])].join('\n')}
+$('#csv').onclick=()=>{
+ if(!items.length){say('Nothing to download yet. Add an issue first.');return}
+ const rows=[['Title','Screen','Heuristic','Severity','Status','Owner','Due','Added','Notes'],...items.map(i=>[i.title,i.screen,i.heur,i.sev,i.status,i.owner||'',i.due||'',new Date(i.created).toISOString().slice(0,10),i.notes])];
+ const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\ufeff'+rows.map(r=>r.map(csvCell).join(',')).join('\n')],{type:'text/csv'}));
+ a.download='bloom-tracker-issues.csv';document.body.appendChild(a);a.click();a.remove();say('CSV downloaded.');
+};
+$('#copy').onclick=async()=>{try{await navigator.clipboard.writeText(summary());say('Summary copied.')}catch(e){say('Copy was blocked by the browser. Download the CSV instead.')}};
+const cf=$('#confirm');
+$('#clear').onclick=()=>{if(!items.length){say('There are no issues to clear.');return}cf.showModal();$('#no').focus()};
+$('#no').onclick=()=>cf.close();
+$('#yes').onclick=()=>{items=[];sel.clear();save();cf.close();render();say('All issues cleared.')};
+$('#bak').onclick=()=>{
+ if(!items.length){say('Nothing to back up yet.');return}
+ const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify({app:'bloom-tracker',version:1,items},null,1)],{type:'application/json'}));
+ a.download='bloom-tracker-backup.json';document.body.appendChild(a);a.click();a.remove();say('Backup downloaded.');
+};
+$('#rst').onclick=()=>$('#rstFile').click();
+$('#rstFile').onchange=async e=>{
+ const f=e.target.files[0];e.target.value='';if(!f)return;
+ try{
+  const d=JSON.parse(await f.text());const arr=Array.isArray(d)?d:d.items;if(!Array.isArray(arr))throw 0;
+  let n=0;const have=new Set(items.map(x=>x.id));
+  arr.forEach(x=>{if(!x||typeof x.title!=='string'||!x.title.trim())return;
+   let id=+x.id||Date.now();while(have.has(id))id+=1;have.add(id);
+   items.push({id,created:+x.created||Date.now(),title:x.title.trim().slice(0,200),screen:String(x.screen||'').slice(0,100),heur:HEUR.includes(x.heur)?x.heur:'Other',sev:Math.min(4,Math.max(1,+x.sev||2)),status:STAT.includes(x.status)?x.status:'Open',notes:String(x.notes||'').slice(0,2000),owner:String(x.owner||'').slice(0,80),due:/^\d{4}-\d{2}-\d{2}$/.test(x.due||'')?x.due:''});n++});
+  save();render();say(n?`Restored ${n} ${n===1?'issue':'issues'}.`:'No valid issues found in that file.');
+ }catch(err){say('That file is not a valid Bloom Tracker backup.')}
+};
+document.addEventListener('keydown',e=>{
+ if(e.key.toLowerCase()!=='n'||e.ctrlKey||e.metaKey||e.altKey)return;
+ if(/^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName)||document.querySelector('dialog[open]'))return;
+ e.preventDefault();lastTrigger=null;openForm();
+});
+render();
+</script>
+</body>
+</html>
